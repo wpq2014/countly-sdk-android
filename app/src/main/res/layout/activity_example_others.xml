@@ -17,13 +17,6 @@
         android:text="@string/set_custom_header_field_value"/>
 
     <Button
-        android:id="@+id/button42"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onClickViewOther02"
-        android:text="@string/ask_for_star_rating"/>
-
-    <Button
         android:id="@+id/button43"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

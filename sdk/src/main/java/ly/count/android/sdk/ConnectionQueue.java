@@ -46,6 +46,7 @@ public class ConnectionQueue {
     private CountlyStore store_;
     private ExecutorService executor_;
     private String appKey_;
+    private String channel_;
     private Context context_;
     private String serverURL_;
     private Future<?> connectionProcessorFuture_;
@@ -59,6 +60,14 @@ public class ConnectionQueue {
 
     void setAppKey(final String appKey) {
         appKey_ = appKey;
+    }
+
+    String getChannel() {
+        return channel_;
+    }
+
+    void setChannel(final String channel) {
+        channel_ = channel;
     }
 
     Context getContext() {
@@ -113,6 +122,9 @@ public class ConnectionQueue {
         }
         if (appKey_ == null || appKey_.length() == 0) {
             throw new IllegalStateException("app key has not been set");
+        }
+        if (channel_ == null || channel_.length() == 0) {
+            throw new IllegalStateException("channel has not been set");
         }
         if (store_ == null) {
             throw new IllegalStateException("countly store has not been set");

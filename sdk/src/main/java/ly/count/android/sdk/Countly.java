@@ -128,10 +128,6 @@ public class Countly {
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     private final List<String> appCrawlerNames = new ArrayList<>(Arrays.asList("Calypso AppCrawler"));//List against which device name is checked to determine if device is app crawler
 
-    //star rating
-    @SuppressWarnings("FieldCanBeLocal")
-    private CountlyStarRating.RatingCallback starRatingCallback_;// saved callback that is used for automatic star rating
-
     //push related
     private boolean addMetadataToPushIntents = false;// a flag that indicates if metadata should be added to push notification intents
 
@@ -178,12 +174,13 @@ public class Countly {
      * @param context application context
      * @param serverURL URL of the Countly server to submit data to; use "https://try.count.ly" for Countly trial server
      * @param appKey app key for the application being tracked; find in the Countly Dashboard under Management &gt; Applications
+     * @param channel app channel
      * @return Countly instance for easy method chaining
      * @throws java.lang.IllegalArgumentException if context, serverURL, appKey, or deviceID are invalid
      * @throws java.lang.IllegalStateException if the Countly SDK has already been initialized
      */
-    public Countly init(final Context context, final String serverURL, final String appKey) {
-        return init(context, serverURL, appKey, null, OpenUDIDAdapter.isOpenUDIDAvailable() ? DeviceId.Type.OPEN_UDID : DeviceId.Type.ADVERTISING_ID);
+    public Countly init(final Context context, final String serverURL, final String appKey, final String channel) {
+        return init(context, serverURL, appKey, channel, null, OpenUDIDAdapter.isOpenUDIDAvailable() ? DeviceId.Type.OPEN_UDID : DeviceId.Type.ADVERTISING_ID);
     }
 
     /**
@@ -192,13 +189,14 @@ public class Countly {
      * @param context application context
      * @param serverURL URL of the Countly server to submit data to
      * @param appKey app key for the application being tracked; find in the Countly Dashboard under Management &gt; Applications
+     * @param channel app channel
      * @param deviceID unique ID for the device the app is running on; note that null in deviceID means that Countly will fall back to OpenUDID, then, if it's not available, to Google Advertising ID
      * @return Countly instance for easy method chaining
      * @throws IllegalArgumentException if context, serverURL, appKey, or deviceID are invalid
      * @throws IllegalStateException if init has previously been called with different values during the same application instance
      */
-    public Countly init(final Context context, final String serverURL, final String appKey, final String deviceID) {
-        return init(context, serverURL, appKey, deviceID, null);
+    public Countly init(final Context context, final String serverURL, final String appKey, final String channel, final String deviceID) {
+        return init(context, serverURL, appKey, channel, deviceID, null);
     }
 
     /**
@@ -207,36 +205,14 @@ public class Countly {
      * @param context application context
      * @param serverURL URL of the Countly server to submit data to
      * @param appKey app key for the application being tracked; find in the Countly Dashboard under Management &gt; Applications
-     * @param deviceID unique ID for the device the app is running on; note that null in deviceID means that Countly will fall back to OpenUDID, then, if it's not available, to Google Advertising ID
-     * @param idMode enum value specifying which device ID generation strategy Countly should use: OpenUDID or Google Advertising ID
-     * @return Countly instance for easy method chaining
-     * @throws IllegalArgumentException if context, serverURL, appKey, or deviceID are invalid
-     * @throws IllegalStateException if init has previously been called with different values during the same application instance
-     */
-    public synchronized Countly init(final Context context, final String serverURL, final String appKey, final String deviceID, DeviceId.Type idMode) {
-        return init(context, serverURL, appKey, deviceID, idMode, -1, null, null, null, null);
-    }
-
-
-    /**
-     * Initializes the Countly SDK. Call from your main Activity's onCreate() method.
-     * Must be called before other SDK methods can be used.
-     * @param context application context
-     * @param serverURL URL of the Countly server to submit data to
-     * @param appKey app key for the application being tracked; find in the Countly Dashboard under Management &gt; Applications
+     * @param channel app channel
      * @param deviceID unique ID for the device the app is running on; note that null in deviceID means that Countly will fall back to OpenUDID, then, if it's not available, to Google Advertising ID
      * @param idMode enum value specifying which device ID generation strategy Countly should use: OpenUDID or Google Advertising ID
-     * @param starRatingLimit sets the limit after how many sessions, for each apps version, the automatic star rating dialog is shown
-     * @param starRatingCallback the callback function that will be called from the automatic star rating dialog
-     * @param starRatingTextTitle the shown title text for the star rating dialogs
-     * @param starRatingTextMessage the shown message text for the star rating dialogs
-     * @param starRatingTextDismiss the shown dismiss button text for the shown star rating dialogs
      * @return Countly instance for easy method chaining
      * @throws IllegalArgumentException if context, serverURL, appKey, or deviceID are invalid
      * @throws IllegalStateException if init has previously been called with different values during the same application instance
      */
-    public synchronized Countly init(final Context context, String serverURL, final String appKey, final String deviceID, DeviceId.Type idMode,
-                                     int starRatingLimit, CountlyStarRating.RatingCallback starRatingCallback, String starRatingTextTitle, String starRatingTextMessage, String starRatingTextDismiss) {
+    public synchronized Countly init(final Context context, String serverURL, final String appKey, final String channel, final String deviceID, DeviceId.Type idMode) {
 
         if (context == null) {
             throw new IllegalArgumentException("valid context is required");
@@ -254,6 +230,9 @@ public class Countly {
 
         if (appKey == null || appKey.length() == 0) {
             throw new IllegalArgumentException("valid appKey is required");
+        }
+        if (channel == null || channel.length() == 0) {
+            throw new IllegalArgumentException("valid channel is required");
         }
         if (deviceID != null && deviceID.length() == 0) {
             throw new IllegalArgumentException("valid deviceID is required");
@@ -278,17 +257,6 @@ public class Countly {
             Log.d(Countly.TAG, "Initializing Countly SDk version " + COUNTLY_SDK_VERSION_STRING);
         }
 
-        // In some cases CountlyMessaging does some background processing, so it needs a way
-        // to start Countly on itself
-        if (MessagingAdapter.isMessagingAvailable()) {
-            MessagingAdapter.storeConfiguration(context, serverURL, appKey, deviceID, idMode);
-        }
-
-
-        //set the star rating values
-        starRatingCallback_ = starRatingCallback;
-        CountlyStarRating.setStarRatingInitConfig(context, starRatingLimit, starRatingTextTitle, starRatingTextMessage, starRatingTextDismiss);
-
         //app crawler check
         checkIfDeviceIsAppCrawler();
 
@@ -312,15 +280,15 @@ public class Countly {
 
             deviceIdInstance.init(context, countlyStore, true);
 
+            DeviceInfo.channel = channel;
+
             connectionQueue_.setServerURL(serverURL);
             connectionQueue_.setAppKey(appKey);
+            connectionQueue_.setChannel(channel);
             connectionQueue_.setCountlyStore(countlyStore);
             connectionQueue_.setDeviceId(deviceIdInstance);
 
             eventQueue_ = new EventQueue(countlyStore);
-
-            //do star rating related things
-            CountlyStarRating.registerAppSession(context, starRatingCallback_);
         }
 
         context_ = context;
@@ -338,104 +306,6 @@ public class Countly {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public synchronized boolean isInitialized() {
         return eventQueue_ != null;
-    }
-
-    /**
-     * Initializes the Countly MessagingSDK. Call from your main Activity's onCreate() method.
-     * @param activity application activity which acts as a final destination for notifications
-     * @param activityClass application activity class which acts as a final destination for notifications
-     * @param projectID ProjectID for this app from Google API Console
-     * @param mode whether this app installation is a test release or production
-     * @return Countly instance for easy method chaining
-     * @throws IllegalStateException if no CountlyMessaging class is found (you need to use countly-messaging-sdk-android library instead of countly-sdk-android)
-     */
-    public Countly initMessaging(Activity activity, Class<? extends Activity> activityClass, String projectID, Countly.CountlyMessagingMode mode) {
-        return initMessaging(activity, activityClass, projectID, null, mode, false, -1, -1, -1);
-    }
-
-    /**
-     * Initializes the Countly MessagingSDK. Call from your main Activity's onCreate() method.
-     * @param activity application activity which acts as a final destination for notifications
-     * @param activityClass application activity class which acts as a final destination for notifications
-     * @param projectID ProjectID for this app from Google API Console
-     * @param mode whether this app installation is a test release or production
-     * @param customIconResId res id for custom icon override
-     * @return Countly instance for easy method chaining
-     * @throws IllegalStateException if no CountlyMessaging class is found (you need to use countly-messaging-sdk-android library instead of countly-sdk-android)
-     */
-    public Countly initMessaging(Activity activity, Class<? extends Activity> activityClass, String projectID, Countly.CountlyMessagingMode mode, int customIconResId) {
-        return initMessaging(activity, activityClass, projectID, null, mode, false, customIconResId, -1, -1);
-    }
-
-    /**
-     * Initializes the Countly MessagingSDK. Call from your main Activity's onCreate() method.
-     * @param activity application activity which acts as a final destination for notifications
-     * @param activityClass application activity class which acts as a final destination for notifications
-     * @param projectID ProjectID for this app from Google API Console
-     * @param mode whether this app installation is a test release or production
-     * @param disableUI don't display dialogs & notifications when receiving push notification
-     * @return Countly instance for easy method chaining
-     * @throws IllegalStateException if no CountlyMessaging class is found (you need to use countly-messaging-sdk-android library instead of countly-sdk-android)
-     */
-    public Countly initMessaging(Activity activity, Class<? extends Activity> activityClass, String projectID, Countly.CountlyMessagingMode mode, boolean disableUI) {
-        return initMessaging(activity, activityClass, projectID, null, mode, disableUI, -1, -1, -1);
-    }
-    /**
-     * Initializes the Countly MessagingSDK. Call from your main Activity's onCreate() method.
-     * @param activity application activity which acts as a final destination for notifications
-     * @param activityClass application activity class which acts as a final destination for notifications
-     * @param projectID ProjectID for this app from Google API Console
-     * @param buttonNames Strings to use when displaying Dialogs (uses new String[]{"Open", "Review"} by default)
-     * @param mode whether this app installation is a test release or production
-     * @return Countly instance for easy method chaining
-     * @throws IllegalStateException if no CountlyMessaging class is found (you need to use countly-messaging-sdk-android library instead of countly-sdk-android)
-     */
-    public synchronized Countly initMessaging(Activity activity, Class<? extends Activity> activityClass, String projectID, String[] buttonNames, Countly.CountlyMessagingMode mode) {
-        return initMessaging(activity, activityClass, projectID, buttonNames, mode, false, -1, -1, -1);
-    }
-
-    /**
-     * Initializes the Countly MessagingSDK. Call from your main Activity's onCreate() method.
-     * @param activity application activity which acts as a final destination for notifications
-     * @param activityClass application activity class which acts as a final destination for notifications
-     * @param projectID ProjectID for this app from Google API Console
-     * @param buttonNames Strings to use when displaying Dialogs (uses new String[]{"Open", "Review"} by default)
-     * @param mode whether this app installation is a test release or production
-     * @param disableUI don't display dialogs & notifications when receiving push notification
-     * @return Countly instance for easy method chaining
-     * @throws IllegalStateException if no CountlyMessaging class is found (you need to use countly-messaging-sdk-android library instead of countly-sdk-android)
-     */
-    public synchronized Countly initMessaging(Activity activity, Class<? extends Activity> activityClass, String projectID, String[] buttonNames, Countly.CountlyMessagingMode mode, boolean disableUI) {
-        return initMessaging(activity, activityClass, projectID, buttonNames, mode, disableUI, -1, -1, -1);
-    }
-
-    /**
-     * Initializes the Countly MessagingSDK. Call from your main Activity's onCreate() method.
-     * @param activity application activity which acts as a final destination for notifications
-     * @param activityClass application activity class which acts as a final destination for notifications
-     * @param projectID ProjectID for this app from Google API Console
-     * @param buttonNames Strings to use when displaying Dialogs (uses new String[]{"Open", "Review"} by default)
-     * @param mode whether this app installation is a test release or production
-     * @param disableUI don't display dialogs & notifications when receiving push notification
-     * @param customSmallIconResId res id for custom icon override
-     * @return Countly instance for easy method chaining
-     * @throws IllegalStateException if no CountlyMessaging class is found (you need to use countly-messaging-sdk-android library instead of countly-sdk-android)
-     */
-    public synchronized Countly initMessaging(Activity activity, Class<? extends Activity> activityClass, String projectID, String[] buttonNames, Countly.CountlyMessagingMode mode, boolean disableUI, int customSmallIconResId, int customLargeIconRes, int customAccentColor) {
-        if (mode != null && !MessagingAdapter.isMessagingAvailable()) {
-            throw new IllegalStateException("you need to include countly-messaging-sdk-android library instead of countly-sdk-android if you want to use Countly Messaging");
-        } else {
-            messagingMode_ = mode;
-            if (!MessagingAdapter.init(activity, activityClass, projectID, buttonNames, disableUI, customSmallIconResId, addMetadataToPushIntents, customLargeIconRes, customAccentColor)) {
-                throw new IllegalStateException("couldn't initialize Countly Messaging");
-            }
-        }
-
-        if (MessagingAdapter.isMessagingAvailable()) {
-            MessagingAdapter.storeConfiguration(connectionQueue_.getContext(), connectionQueue_.getServerURL(), connectionQueue_.getAppKey(), connectionQueue_.getDeviceId().getId(), connectionQueue_.getDeviceId().getType());
-        }
-
-        return this;
     }
 
     /**
@@ -457,6 +327,7 @@ public class Countly {
         connectionQueue_.setContext(null);
         connectionQueue_.setServerURL(null);
         connectionQueue_.setAppKey(null);
+        connectionQueue_.setChannel(null);
         connectionQueue_.setCountlyStore(null);
         prevSessionDurationStartTime_ = 0;
         activityCount_ = 0;
@@ -1354,182 +1225,6 @@ public class Countly {
         }
         certificatePinCertificates = certificates;
         return Countly.sharedInstance();
-    }
-
-    /**
-     * Shows the star rating dialog
-     * @param activity the activity that will own the dialog
-     * @param callback callback for the star rating dialog "rate" and "dismiss" events
-     */
-    public void showStarRating(Activity activity, CountlyStarRating.RatingCallback callback){
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Showing star rating");
-        }
-        CountlyStarRating.showStarRating(activity, callback);
-    }
-
-    /**
-     * Set's the text's for the different fields in the star rating dialog. Set value null if for some field you want to keep the old value
-     * @param starRatingTextTitle dialog's title text
-     * @param starRatingTextMessage dialog's message text
-     * @param starRatingTextDismiss dialog's dismiss buttons text
-     */
-    public synchronized Countly setStarRatingDialogTexts(String starRatingTextTitle, String starRatingTextMessage, String starRatingTextDismiss) {
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return this;
-            }
-        }
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Setting star rating texts");
-        }
-
-        CountlyStarRating.setStarRatingInitConfig(context_, -1, starRatingTextTitle, starRatingTextMessage, starRatingTextDismiss);
-
-        return this;
-    }
-
-    /**
-     * Set if the star rating should be shown automatically
-     * @param IsShownAutomatically set it true if you want to show the app star rating dialog automatically for each new version after the specified session amount
-     */
-    public synchronized Countly setIfStarRatingShownAutomatically(boolean IsShownAutomatically) {
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return this;
-            }
-        }
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Setting to show star rating automaticaly: [" + IsShownAutomatically + "]");
-        }
-
-        CountlyStarRating.setShowDialogAutomatically(context_, IsShownAutomatically);
-
-        return this;
-    }
-
-    /**
-     * Set if the star rating is shown only once per app lifetime
-     * @param disableAsking set true if you want to disable asking the app rating for each new app version (show it only once per apps lifetime)
-     */
-    public synchronized Countly setStarRatingDisableAskingForEachAppVersion(boolean disableAsking) {
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return this;
-            }
-        }
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Setting to disable showing of star rating for each app version:[" + disableAsking + "]");
-        }
-
-        CountlyStarRating.setStarRatingDisableAskingForEachAppVersion(context_, disableAsking);
-
-        return this;
-    }
-
-    /**
-     * Set after how many sessions the automatic star rating will be shown for each app version
-     * @param limit app session amount for the limit
-     */
-    public synchronized Countly setAutomaticStarRatingSessionLimit(int limit) {
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return this;
-            }
-        }
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Setting automatic star rating session limit: [" + limit + "]");
-        }
-        CountlyStarRating.setStarRatingInitConfig(context_, limit, null, null, null);
-
-        return this;
-    }
-
-    /**
-     * Returns the session limit set for automatic star rating
-     */
-    public int getAutomaticStarRatingSessionLimit(){
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return -1;
-            }
-        }
-
-        int sessionLimit = CountlyStarRating.getAutomaticStarRatingSessionLimit(context_);
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Getting automatic star rating session limit: [" + sessionLimit + "]");
-        }
-
-        return sessionLimit;
-    }
-
-    /**
-     * Returns how many sessions has star rating counted internally for the current apps version
-     */
-    public int getStarRatingsCurrentVersionsSessionCount(){
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return -1;
-            }
-        }
-
-        int sessionCount = CountlyStarRating.getCurrentVersionsSessionCount(context_);
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Getting star rating current version session count: [" + sessionCount + "]");
-        }
-
-        return sessionCount;
-    }
-
-    /**
-     * Set the automatic star rating session count back to 0
-     */
-    public void clearAutomaticStarRatingSessionCount(){
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return;
-            }
-        }
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Clearing star rating session count");
-        }
-
-        CountlyStarRating.clearAutomaticStarRatingSessionCount(context_);
-    }
-
-    /**
-     * Set if the star rating dialog is cancellable
-     * @param isCancellable set this true if it should be cancellable
-     */
-    public synchronized Countly setIfStarRatingDialogIsCancellable(boolean isCancellable){
-        if(context_ == null) {
-            if (Countly.sharedInstance().isLoggingEnabled()) {
-                Log.e(Countly.TAG, "Can't call this function before init has been called");
-                return this;
-            }
-        }
-
-        if (Countly.sharedInstance().isLoggingEnabled()) {
-            Log.d(Countly.TAG, "Setting if star rating is cancellable: [" + isCancellable + "]");
-        }
-
-        CountlyStarRating.setIfRatingDialogIsCancellable(context_, isCancellable);
-
-        return this;
     }
 
     /**

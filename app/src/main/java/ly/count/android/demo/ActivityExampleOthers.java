@@ -3,10 +3,8 @@ package ly.count.android.demo;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import ly.count.android.sdk.Countly;
-import ly.count.android.sdk.CountlyStarRating;
 import ly.count.android.sdk.DeviceId;
 
 @SuppressWarnings("UnusedParameters")
@@ -24,20 +22,6 @@ public class ActivityExampleOthers extends Activity {
     @SuppressWarnings("unused")
     public void onClickViewOther01(View v) {
 
-    }
-
-    public void onClickViewOther02(View v) {
-        Countly.sharedInstance().showStarRating(activity, new CountlyStarRating.RatingCallback() {
-            @Override
-            public void onRate(int rating) {
-                Toast.makeText(activity, "onRate called with rating: " + rating, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onDismiss() {
-                Toast.makeText(activity, "onDismiss called", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     public void onClickViewOther03(View v) {

@@ -378,6 +378,7 @@ class CrashDetails {
                 "_os_version", DeviceInfo.getOSVersion(),
                 "_resolution", DeviceInfo.getResolution(context),
                 "_app_version", DeviceInfo.getAppVersion(context),
+                "_channel", DeviceInfo.channel,
                 "_manufacture", getManufacturer(),
                 "_cpu", getCpu(),
                 "_opengl", getOpenGL(context),

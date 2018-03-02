@@ -72,6 +72,11 @@ class DeviceInfo {
     static String deepLink;
 
     /**
+     * 来源（渠道）
+     */
+    static String channel;
+
+    /**
      * Returns the non-scaled pixel resolution of the current default display being used by the
      * WindowManager in the specified context.
      * @param context context to use to retrieve the current WindowManager
@@ -251,7 +256,9 @@ class DeviceInfo {
                 "_locale", getLocale(),
                 "_app_version", getAppVersion(context),
                 "_store", getStore(context),
-                "_deep_link", deepLink);
+                "_deep_link", deepLink,
+                "_channel", channel,
+                "_source", channel);
 
         String result = json.toString();
 

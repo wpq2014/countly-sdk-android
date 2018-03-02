@@ -44,7 +44,7 @@ public class CountlyTests extends AndroidTestCase {
         mUninitedCountly = new Countly();
 
         mCountly = new Countly();
-        mCountly.init(getContext(), "http://test.count.ly", "appkey", "1234");
+        mCountly.init(getContext(), "http://test.count.ly", "appkey", "1234", "123456789");
     }
 
     @Override

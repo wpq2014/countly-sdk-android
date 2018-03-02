@@ -13,11 +13,8 @@ import ly.count.android.sdk.Countly;
 
 @SuppressWarnings("UnusedParameters")
 public class MainActivity extends Activity {
-    private String demoTag = "CountlyDemo";
 
-    /** You should use try.count.ly instead of YOUR_SERVER for the line below if you are using Countly trial service */
-    final String COUNTLY_SERVER_URL = "YOUR_SERVER";
-    final String COUNTLY_APP_KEY = "YOUR_APP_KEY";
+    private String demoTag = "CountlyDemo";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -26,16 +23,16 @@ public class MainActivity extends Activity {
 
         Context appC = getApplicationContext();
 
-        Countly.onCreate(this);
         Countly.sharedInstance().setLoggingEnabled(true);
         Countly.sharedInstance().enableCrashReporting();
         Countly.sharedInstance().setViewTracking(true);
         Countly.sharedInstance().setAutoTrackingUseShortName(true);
-        //Countly.sharedInstance().setHttpPostForced(true);
+//        Countly.sharedInstance().setHttpPostForced(true);
         //Log.i(demoTag, "Before calling init. This should return 'false', the value is:" + Countly.sharedInstance().isInitialized());
-        Countly.sharedInstance().init(appC, COUNTLY_SERVER_URL, COUNTLY_APP_KEY);
+        Countly.sharedInstance().init(appC, Constants.COUNTLY_SERVER_URL, Constants.COUNTLY_APP_KEY, Constants.COUNTLY_CHANNEL, "dankegongyu123456789");
         //Log.i(demoTag, "After calling init. This should return 'true', the value is:" + Countly.sharedInstance().isInitialized());
 
+        Countly.onCreate(this);
     }
 
     public void onClickButtonCustomEvents(View v) {
