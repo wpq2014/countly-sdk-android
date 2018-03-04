@@ -257,8 +257,7 @@ class DeviceInfo {
                 "_app_version", getAppVersion(context),
                 "_store", getStore(context),
                 "_deep_link", deepLink,
-                "_channel", channel,
-                "_source", channel);
+                "_store", channel);
 
         String result = json.toString();
 

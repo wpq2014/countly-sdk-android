@@ -13,6 +13,6 @@ public final class Constants {
      */
     public static final String COUNTLY_SERVER_URL = "http://countly.dankegongyu.com";
     public static final String COUNTLY_APP_KEY = "5cc6cc4408e7b93761669d3777cf978fb4a7127b";
-    public static final String COUNTLY_CHANNEL = "danke_test";
+    public static final String COUNTLY_CHANNEL = "danke_store";
 
 }
