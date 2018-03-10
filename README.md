@@ -1,7 +1,7 @@
 # Countly Android SDK <!-- [![Build Status](https://api.travis-ci.org/Countly/countly-sdk-android.png)](https://travis-ci.org/Countly/countly-sdk-android) --> [![API](https://img.shields.io/badge/API-9%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=9)
 
-1. 默认demo初始化没有渠道参数，所以修改源码添加渠道字段；
-2. 删除推送sdk和star评分相关代码，主要保留埋点统计和crash上报功能。
+<font color="#ff0000">1. 默认demo初始化没有渠道参数，所以修改源码添加渠道字段；
+    2. 删除推送sdk和star评分相关代码，主要保留埋点统计和crash上报功能。</font>
 
 We're hiring: Countly is looking for Android SDK developers, full stack devs, devops and growth hackers (remote work). [Click this link for job description](https://angel.co/countly/jobs/)
 
